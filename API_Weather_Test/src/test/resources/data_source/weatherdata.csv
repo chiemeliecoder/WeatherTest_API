@@ -1,0 +1,3 @@
+﻿lat,lon,forecast dt unixtime,forecast dt iso,slice dt unixtime,slice dt iso,temperature,dew_point,pressure,ground_pressure,humidity,clouds,wind_speed,wind_deg,rain,snow,ice,fr_rain,convective,snow_depth,accumulated,hours,rate
+51.50853,-0.12574,1552932000,2019-03-18 18:00:00 +0000 UTC,1553007600,2019-03-19 15:00:00 +0000 UTC,13.21,5.91,1027.464,1022.551,61.4,49,3.07,232.104,0.125,0,0,0,0.125,0,0.125,3,0
+51.50853,-0.12574,1552932000,2019-03-18 18:00:00 +0000 UTC,1553018400,2019-03-19 18:00:00 +0000 UTC,11.5,8.06,1028.191,1023.335,79.428,70,3.126,239.85,0.188,0,0,0,0.188,0,0.188,6,0
