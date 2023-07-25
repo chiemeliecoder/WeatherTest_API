@@ -144,8 +144,7 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
             // Assertion 4: Check if wind speed is not negative
             softAssert.assertTrue(windSpeed >= 0, "Wind speed should not be negative.");
         }
-
-        // Add more assertions based on your requirements
+        
 
         softAssert.assertAll();
 
