@@ -7,6 +7,7 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import java.lang.invoke.MethodHandles;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,65 +49,7 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
         getWeatherMethods.validateResponseAgainstSchema("api/weather/_get/response.schema");
     }
 
-
-
-    // Create a new data provider method to read the weather data from the CSV file
-    @DataProvider(name = "weatherData")
-    public Object[][] getWeatherData() {
-        return new Object[][]{
-            // No need to provide any data here as @CsvDataSourceParameters will handle it
-//
-//            {
-//                createWeatherDataMap(51.50853, -0.12574, 1546300800L, "2019-01-01 00:00:00 +0000 UTC",
-//                    1546300800L, "2019-01-01 00:00:00 +0000 UTC", 8.08, 4.63,
-//                    1034.848, 1029.908, 78.61, null, 2.959, 292.075, null, null,
-//                    null, 0, null, null, null, null, null)
-//            },
-//            {
-//                createWeatherDataMap(51.50853, -0.12574, 1546300800L, "2019-01-01 00:00:00 +0000 UTC",
-//                    1546311600L, "2019-01-01 03:00:00 +0000 UTC", 6.34, 4.6,
-//                    1034.323, 1029.479, 88.804, 66, 3.277, 280.693, 0, 0,
-//                    0, null, null, null, null, null, null)
-//            }
-        };
-    }
-
-
-    // Helper method to create the weather data map
-//    private Map<String, Object> createWeatherDataMap(double lat, double lon, long forecastDtUnixTime, String forecastDtIso,
-//        long sliceDtUnixTime, String sliceDtIso, Double temperature, Double dewPoint, double pressure,
-//        double groundPressure, double humidity, Integer clouds, Double windSpeed, double windDeg,
-//        Integer rain, Integer snow, Integer ice, Integer frRain, Double convective, String snowDepth,
-//        String accumulated, String hours, String rate)  {
-//        Map<String, Object> weatherData = new HashMap<>();
-//        weatherData.put("lat", lat);
-//        weatherData.put("lon", lon);
-//        weatherData.put("forecast dt unixtime", forecastDtUnixTime);
-//        weatherData.put("forecast dt iso", forecastDtIso);
-//        weatherData.put("slice dt unixtime", sliceDtUnixTime);
-//        weatherData.put("slice dt iso", sliceDtIso);
-//        weatherData.put("temperature", temperature);
-//        weatherData.put("dew_point", dewPoint);
-//        weatherData.put("pressure", pressure);
-//        weatherData.put("ground_pressure", groundPressure);
-//        weatherData.put("humidity", humidity);
-//        weatherData.put("clouds", clouds);
-//        weatherData.put("wind_speed", windSpeed);
-//        weatherData.put("wind_deg", windDeg);
-//        weatherData.put("rain", rain != null ? rain : 0); // Store as Integer, not String
-//        weatherData.put("snow", snow != null ? snow : 0); // Store as Integer, not String
-//        weatherData.put("ice", ice != null ? ice : 0); // Store as Integer, not String
-//        weatherData.put("fr_rain", frRain);
-//        weatherData.put("convective", convective);
-//        weatherData.put("snow_depth", snowDepth);
-//        weatherData.put("accumulated", accumulated);
-//        weatherData.put("hours", hours);
-//        weatherData.put("rate", rate);
-//        return weatherData;
-//    }
-
-
-
+    
 
 
 
@@ -134,6 +77,20 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
             softAssert.assertTrue(temperature > dewPoint, "Temperature should be greater than dew point.");
         }
 
+        softAssert.assertAll();
+
+    }
+
+
+    @Test(dataProvider = "DataProvider")
+    @MethodOwner(owner = "cezeokeke")
+    @XlsDataSourceParameters(path = "data_source/weatherDa.xlsx",  sheet = "weatherdata", dsUid = "forecast dt unixtime")
+    public void testWindSpeedForecast(Map<String, String> weatherData){
+        // Extract the values and handle null cases
+        String windSpeedStr = weatherData.get("wind_speed");
+
+        SoftAssert softAssert = new SoftAssert();
+
         // Assertion 3: Check if wind speed is not null
         softAssert.assertNotNull(windSpeedStr, "Wind speed should not be null.");
 
@@ -144,7 +101,6 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
             // Assertion 4: Check if wind speed is not negative
             softAssert.assertTrue(windSpeed >= 0, "Wind speed should not be negative.");
         }
-        
 
         softAssert.assertAll();
 
@@ -165,6 +121,21 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
         Assert.assertEquals(cityName, "Boston");
 
         // You can add more validation checks here as per your API response format
+        //validate response
+    }
+
+
+    @Test
+    @MethodOwner(owner = "cezeokeke")
+    public void testing(){
+        GetWeatherMethods getWeatherMethods = new GetWeatherMethods();
+        Response response = getWeatherMethods.callAPIExpectSuccess();
+
+        // Call the validateResponse method to perform the validation checks
+        boolean isValid = getWeatherMethods.validateResponse(response);
+
+        // Perform additional assertions based on the validation result
+        Assert.assertTrue(isValid, "API response validation failed.");
     }
 
 
@@ -254,7 +225,30 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
     }
 
 
+
+    @Test()
+    @MethodOwner(owner = "cezeokeke")
+    public void testCreateWeather(){
+        LOGGER.info("test");
+        GetWeatherMethods api = new GetWeatherMethods();
+        api.setProperties("api/weather/weather.properties");
+
+        AtomicInteger counter = new AtomicInteger(0);
+
+        api.callAPIWithRetry()
+            .withLogStrategy(APIMethodPoller.LogStrategy.ALL)
+            .peek(rs -> counter.getAndIncrement())
+            .until(rs -> counter.get() == 4)
+            .pollEvery(1, ChronoUnit.SECONDS)
+            .stopAfter(10, ChronoUnit.SECONDS)
+            .execute();
+
+        api.validateResponse();
+    }
+
+
     // Response Time Testing - Verify the API's response time meets requirements
+    //7 no rest assured
     @Test
     @MethodOwner(owner = "cezeokeke")
     public void testResponseTime() {
@@ -281,24 +275,5 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
     }
 
 
-    @Test()
-    @MethodOwner(owner = "cezeokeke")
-    public void testCreateWeather(){
-        LOGGER.info("test");
-        GetWeatherMethods api = new GetWeatherMethods();
-        api.setProperties("api/weather/weather.properties");
-
-        AtomicInteger counter = new AtomicInteger(0);
-
-        api.callAPIWithRetry()
-            .withLogStrategy(APIMethodPoller.LogStrategy.ALL)
-            .peek(rs -> counter.getAndIncrement())
-            .until(rs -> counter.get() == 4)
-            .pollEvery(1, ChronoUnit.SECONDS)
-            .stopAfter(10, ChronoUnit.SECONDS)
-            .execute();
-
-        api.validateResponse();
-    }
 
 }

@@ -33,4 +33,13 @@ public class GetWeatherMethods extends AbstractApiMethodV2 {
   public Response getResponse() {
     return response;
   }
+
+  public boolean validateResponse(Response response) {
+    // Validation logic goes here
+    // Return true if validation passes, false otherwise
+    // For example:
+    int statusCode = response.getStatusCode();
+    String cityName = response.jsonPath().getString("name");
+    return (statusCode == 200 && "Boston".equals(cityName));
+  }
 }
