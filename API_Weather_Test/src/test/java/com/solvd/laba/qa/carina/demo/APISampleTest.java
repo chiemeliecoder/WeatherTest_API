@@ -1,5 +1,7 @@
 package com.solvd.laba.qa.carina.demo;
 
+import com.solvd.laba.qa.carina.demo.api.WeatherDataProvider;
+import com.solvd.laba.qa.carina.demo.api.weatherapi.GetWeatherCoordinates;
 import com.solvd.laba.qa.carina.demo.api.weatherapi.GetWeatherMethods;
 import com.zebrunner.carina.dataprovider.IAbstractDataProvider;
 import com.zebrunner.carina.dataprovider.annotations.XlsDataSourceParameters;
@@ -49,7 +51,26 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
         getWeatherMethods.validateResponseAgainstSchema("api/weather/_get/response.schema");
     }
 
-    
+
+
+
+
+
+
+    @Test(dataProvider = "weatherlocation" , dataProviderClass = WeatherDataProvider.class)
+    public void testWeatherData(double lon, double lat) {
+        GetWeatherCoordinates gw = new GetWeatherCoordinates(lon,lat);
+        Response r = gw.callAPIExpectSuccess();
+        //gw.validateResponse(r);
+        double latitude = r.jsonPath().getDouble("coord.lat");
+        double longitude = r.jsonPath().getDouble("coord.lon");
+        Assert.assertEquals(lat, latitude, "Latitude is not as expected.");
+        Assert.assertEquals(lon, longitude, "Longitude is not as expected.");
+
+    }
+
+
+
 
 
 
@@ -60,7 +81,6 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
         // Extract the values and handle null cases
         String temperatureStr = weatherData.get("temperature");
         String dewPointStr = weatherData.get("dew_point");
-        String windSpeedStr = weatherData.get("wind_speed");
 
         SoftAssert softAssert = new SoftAssert();
 
@@ -122,6 +142,8 @@ public class APISampleTest implements IAbstractTest, IAbstractDataProvider {
 
         // You can add more validation checks here as per your API response format
         //validate response
+        boolean isValid = getWeatherMethods.validateResponse(response);
+        Assert.assertTrue(isValid, "it is not valid");
     }
 
 
